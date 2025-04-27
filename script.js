@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		if (typeof NDEFReader === 'undefined') {
 			if (nfcStatus) {
 				nfcStatus.textContent = 'Web NFC is not supported in this browser';
+				nfcStatus.style.color = '#FB6432';
 			}
 			return;
 		}

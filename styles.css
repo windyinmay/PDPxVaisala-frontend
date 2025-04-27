@@ -628,10 +628,10 @@ body:not(.at-welcome-page) .welcome-top-toolbar {
 	transition: box-shadow 0.3s ease;
 }
 #login-btn.enabled {
-	background-color: var(--misty-green);
+	background-color: var(--thunder-blue);
 	color: white;
 	cursor: pointer;
-	color: var(--thunder-blue);
+	/* color: var(--thunder-blue); */
 }
 #login-btn.enabled:hover {
 	text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
@@ -1631,7 +1631,7 @@ input:checked + .toggle-slider:before {
 }
 
 .ready-to-scan img {
-	width: 60%;
+	/* width: 60%; */
 	object-fit: contain;
 	/*display: block;*/
 	/*margin: 30px auto;*/
@@ -1642,6 +1642,10 @@ input:checked + .toggle-slider:before {
 	transform: translateX(-50%);
 	transition: opacity 0.2s ease-in-out;
 	/*border: 1px solid #333;*/
+	width: 339px;
+	height: 255px;
+	/* flex-shrink: 0; */
+	aspect-ratio: 113/85;
 }
 
 .active-scan-image {
