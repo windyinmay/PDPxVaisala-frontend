@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	const skipNfcBtn = document.getElementById('skip-nfc-btn');
 	const startScanBtn = document.getElementById('start-scan-btn');
 	const skipInstructionsBtn = document.getElementById('skip-instructions-btn');
+	const instructionsContent = document.querySelector('.instructions-content');
 	const mainMenuBtns = document.querySelectorAll('#welcome-page .btn');
 	const backButton = document.querySelector('.back-button');
 	const nfcInfoPage = document.getElementById('nfc-info-page');
@@ -377,8 +378,40 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Skip instructions button
-	if (skipInstructionsBtn) {
+	// Skip instructions button and instruction content
+	// -> modified after testing with Bea the first time
+	// if (skipInstructionsBtn) {
+	// 	skipInstructionsBtn.addEventListener('click', function () {
+	// 		showPage('login-page');
+	// 	});
+	// }
+	const originalBackgroundColor =
+		getComputedStyle(skipInstructionsBtn).backgroundColor;
+
+	// Color when user reaches bottom
+	const nextButtonColor = '#91c1b9';
+
+	if (skipInstructionsBtn && appOverviewPage) {
+		function checkScroll() {
+			const scrollPosition = window.scrollY + window.innerHeight;
+			const appOverviewBottom =
+				appOverviewPage.offsetTop + appOverviewPage.offsetHeight;
+
+			if (scrollPosition >= appOverviewBottom - 5) {
+				// User reached bottom
+				skipInstructionsBtn.textContent = 'Next';
+				skipInstructionsBtn.style.backgroundColor = nextButtonColor;
+				skipInstructionsBtn.style.color = '#0a2a3d';
+			} else {
+				// User scrolled back up
+				skipInstructionsBtn.textContent = 'Skip Instructions';
+				skipInstructionsBtn.style.backgroundColor = originalBackgroundColor;
+				skipInstructionsBtn.style.color = 'white';
+			}
+		}
+
+		window.addEventListener('scroll', checkScroll);
+
 		skipInstructionsBtn.addEventListener('click', function () {
 			showPage('login-page');
 		});
@@ -427,125 +460,236 @@ document.addEventListener('DOMContentLoaded', function () {
 	//const DISCONNECT_TIMEOUT = 5000; // 5 seconds before disconnecting
 
 	let isConnected = false;
+	let abortController = null;
 	let activeScan = false;
 
 	let ndef = null;
 	let tagCheckTimer = null;
 
-	const DISCONNECT_TIMEOUT = 2000; // 2 seconds before disconnecting
+	const DISCONNECT_TIMEOUT = 3000; // 5 seconds before disconnecting
+	//Old version -- Nina's code is below
+	// async function startNFC() {
+	// 	// Check if Web NFC is available
+	// 	if (typeof NDEFReader === 'undefined') {
+	// 		if (nfcStatus) {
+	// 			nfcStatus.textContent = 'Web NFC is not supported in this browser';
+	// 		}
+	// 		return;
+	// 	}
 
+	// 	// Clear any existing interval
+	// 	if (connectionCheckInterval) {
+	// 		clearInterval(connectionCheckInterval);
+	// 		connectionCheckInterval = null;
+	// 	}
+
+	// 	try {
+	// 		const ndef = new NDEFReader();
+	// 		if (nfcStatus) {
+	// 			nfcStatus.textContent = 'Requesting NFC permissions...';
+	// 		}
+
+	// 		await ndef.scan();
+	// 		if (nfcStatus) {
+	// 			nfcStatus.textContent = 'NFC Started! Scanning for tags...';
+	// 		}
+
+	// 		// Set initial connection timeout
+	// 		const timeoutId = setTimeout(() => {
+	// 			if (nfcStatus) {
+	// 				nfcStatus.textContent = 'Connection timed out after 5 seconds';
+	// 			}
+	// 		}, CONNECTION_TIMEOUT);
+
+	// 		// Start connection checking interval
+	// 		connectionCheckInterval = setInterval(() => {
+	// 			const currentTime = Date.now();
+
+	// 			// If we were connected and haven't had a reading in DISCONNECT_TIMEOUT ms
+	// 			if (isConnected && currentTime - lastReadingTime > DISCONNECT_TIMEOUT) {
+	// 				isConnected = false;
+	// 				if (nfcStatus) {
+	// 					nfcStatus.textContent = 'Tag disconnected';
+	// 				}
+
+	// 				// Update scan complete text
+	// 				const scanCompleteEl = document.getElementById('scanComplete');
+	// 				if (scanCompleteEl) {
+	// 					scanCompleteEl.textContent =
+	// 						'Sensor HMD90 disconnected - Status: Inactive';
+	// 				}
+	// 			}
+	// 		}, 500); // Check every half second
+
+	// 		ndef.addEventListener('reading', (event) => {
+	// 			// Clear the timeout when a tag is found
+	// 			clearTimeout(timeoutId);
+
+	// 			// Update the last reading time
+	// 			lastReadingTime = Date.now();
+
+	// 			// Update connected state
+	// 			if (!isConnected) {
+	// 				isConnected = true;
+
+	// 				if (deviceId) {
+	// 					deviceId.textContent = event.serialNumber;
+	// 				}
+
+	// 				if (nfcStatus) {
+	// 					nfcStatus.textContent = 'Connected successfully';
+	// 				}
+
+	// 				// Add connection status to the scanComplete element
+	// 				const scanCompleteEl = document.getElementById('scanComplete');
+	// 				if (scanCompleteEl) {
+	// 					scanCompleteEl.textContent =
+	// 						'Sensor HMD90 connected - Status: Active';
+	// 				}
+
+	// 				showPage('connected-page');
+	// 			}
+	// 		});
+
+	// 		// Add an event listener to regularly read the tag if it's still in range
+	// 		ndef.addEventListener('reading', () => {
+	// 			// This is the key part: Web NFC will continuously read the tag
+	// 			// while it's in range and fire reading events, which updates lastReadingTime
+	// 			lastReadingTime = Date.now();
+	// 		});
+
+	// 		ndef.addEventListener('readingerror', (error) => {
+	// 			// Clear the timeout on error
+	// 			clearTimeout(timeoutId);
+
+	// 			if (nfcStatus) {
+	// 				nfcStatus.textContent = `Error reading tag: ${error.message}`;
+	// 			}
+	// 		});
+	// 	} catch (error) {
+	// 		let errorMessage = `Error: ${error.name}`;
+	// 		if (error.name === 'NotAllowedError') {
+	// 			errorMessage += ' - NFC permission denied';
+	// 		} else if (error.name === 'NotSupportedError') {
+	// 			errorMessage += ' - NFC not supported on this device';
+	// 		} else {
+	// 			errorMessage += ` - ${error.message}`;
+	// 		}
+	// 		if (nfcStatus) {
+	// 			nfcStatus.textContent = errorMessage;
+	// 		}
+	// 	}
+	// }
+	//Try cleaner version
 	async function startNFC() {
-		// Check if Web NFC is available
 		if (typeof NDEFReader === 'undefined') {
-			if (nfcStatus) {
-				nfcStatus.textContent = 'Web NFC is not supported in this browser';
-				nfcStatus.style.color = '#FB6432';
-			}
+			updateStatus('Web NFC is not supported in this browser.', true);
 			return;
 		}
 
-		// Clear any existing interval
-		if (connectionCheckInterval) {
-			clearInterval(connectionCheckInterval);
-			connectionCheckInterval = null;
-		}
+		stopNFC(); // Clean up previous NFC if any
+
+		abortController = new AbortController();
+		const { signal } = abortController;
+		const ndef = new NDEFReader();
 
 		try {
-			const ndef = new NDEFReader();
-			if (nfcStatus) {
-				nfcStatus.textContent = 'Requesting NFC permissions...';
-			}
+			updateStatus('Requesting NFC permissions...');
+			await ndef.scan({ signal });
 
-			await ndef.scan();
-			if (nfcStatus) {
-				nfcStatus.textContent = 'NFC Started! Scanning for tags...';
-			}
+			updateStatus('NFC Started! Scanning for tags...');
 
-			// Set initial connection timeout
 			const timeoutId = setTimeout(() => {
-				if (nfcStatus) {
-					nfcStatus.textContent = 'Connection timed out after 5 seconds';
-				}
+				updateStatus('Connection timed out after 5 seconds.', true);
+				stopNFC();
 			}, CONNECTION_TIMEOUT);
 
-			// Start connection checking interval
-			connectionCheckInterval = setInterval(() => {
-				const currentTime = Date.now();
-
-				// If we were connected and haven't had a reading in DISCONNECT_TIMEOUT ms
-				if (isConnected && currentTime - lastReadingTime > DISCONNECT_TIMEOUT) {
-					isConnected = false;
-					if (nfcStatus) {
-						nfcStatus.textContent = 'Tag disconnected';
-					}
-
-					// Update scan complete text
-					const scanCompleteEl = document.getElementById('scanComplete');
-					if (scanCompleteEl) {
-						scanCompleteEl.textContent =
-							'Sensor HMD90 disconnected - Status: Inactive';
-					}
-				}
-			}, 500); // Check every half second
+			connectionCheckInterval = setInterval(checkConnection, 500);
 
 			ndef.addEventListener('reading', (event) => {
-				// Clear the timeout when a tag is found
 				clearTimeout(timeoutId);
-
-				// Update the last reading time
 				lastReadingTime = Date.now();
 
-				// Update connected state
 				if (!isConnected) {
 					isConnected = true;
-
-					if (deviceId) {
-						deviceId.textContent = event.serialNumber;
-					}
-
-					if (nfcStatus) {
-						nfcStatus.textContent = 'Connected successfully';
-					}
-
-					// Add connection status to the scanComplete element
+					updateStatus('Connected successfully!');
 					const scanCompleteEl = document.getElementById('scanComplete');
 					if (scanCompleteEl) {
 						scanCompleteEl.textContent =
 							'Sensor HMD90 connected - Status: Active';
 					}
-
+					if (deviceId) {
+						deviceId.textContent = event.serialNumber;
+					}
 					showPage('connected-page');
 				}
 			});
 
-			// Add an event listener to regularly read the tag if it's still in range
-			ndef.addEventListener('reading', () => {
-				// This is the key part: Web NFC will continuously read the tag
-				// while it's in range and fire reading events, which updates lastReadingTime
-				lastReadingTime = Date.now();
+			ndef.addEventListener('readingerror', () => {
+				updateStatus('Error reading NFC tag.', true);
 			});
 
-			ndef.addEventListener('readingerror', (error) => {
-				// Clear the timeout on error
-				clearTimeout(timeoutId);
-
-				if (nfcStatus) {
-					nfcStatus.textContent = `Error reading tag: ${error.message}`;
-				}
+			signal.addEventListener('abort', () => {
+				updateStatus('NFC scanning stopped.', true);
 			});
 		} catch (error) {
-			let errorMessage = `Error: ${error.name}`;
-			if (error.name === 'NotAllowedError') {
-				errorMessage += ' - NFC permission denied';
-			} else if (error.name === 'NotSupportedError') {
-				errorMessage += ' - NFC not supported on this device';
-			} else {
-				errorMessage += ` - ${error.message}`;
-			}
-			if (nfcStatus) {
-				nfcStatus.textContent = errorMessage;
-			}
+			handleError(error);
+			autoReconnect();
 		}
+	}
+
+	function stopNFC() {
+		if (abortController) {
+			abortController.abort();
+			abortController = null;
+		}
+		if (connectionCheckInterval) {
+			clearInterval(connectionCheckInterval);
+			connectionCheckInterval = null;
+		}
+		isConnected = false;
+	}
+
+	function checkConnection() {
+		const now = Date.now();
+		if (isConnected && now - lastReadingTime > DISCONNECT_TIMEOUT) {
+			isConnected = false;
+			updateStatus('Tag disconnected.', true);
+
+			const scanCompleteEl = document.getElementById('scanComplete');
+			if (scanCompleteEl) {
+				scanCompleteEl.textContent =
+					'Sensor HMD90 disconnected - Status: Inactive';
+			}
+
+			stopNFC();
+			autoReconnect();
+		}
+	}
+
+	function updateStatus(message, isError = false) {
+		if (nfcStatus) {
+			nfcStatus.textContent = message;
+			nfcStatus.style.color = isError ? '#fb6432' : '';
+		}
+	}
+
+	function handleError(error) {
+		let errorMessage = `Error: ${error.name}`;
+		if (error.name === 'NotAllowedError') {
+			errorMessage += ' - NFC permission denied';
+		} else if (error.name === 'NotSupportedError') {
+			errorMessage += ' - NFC not supported';
+		} else if (error.message) {
+			errorMessage += ` - ${error.message}`;
+		}
+		updateStatus(errorMessage, true);
+	}
+
+	function autoReconnect() {
+		setTimeout(() => {
+			startNFC();
+		}, 2000); // Try reconnecting after 2 seconds
 	}
 
 	async function startNFC_working() {
@@ -704,6 +848,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		}
 	}
+
 	// Modify the updateProgressBar function with the correct step IDs
 	function updateProgressBar(pageId) {
 		const progressBarContainer = document.getElementById(

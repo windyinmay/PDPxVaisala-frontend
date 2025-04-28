@@ -315,6 +315,7 @@ p {
 	border: none;
 	width: 100%;
 	box-sizing: border-box;
+	overflow-y: auto;
 }
 
 .instructions-content h2 {
