@@ -580,14 +580,125 @@ document.addEventListener('DOMContentLoaded', function () {
 	// 		}
 	// 	}
 	// }
-	//Try cleaner version
+	//Try cleaner version - 5th May it worked last time when having
+	// co-creation workshop with sponsors, reconnected in calibration/ install flow
+	// async function startNFC() {
+	// 	if (typeof NDEFReader === 'undefined') {
+	// 		updateStatus('Web NFC is not supported in this browser.', true);
+	// 		return;
+	// 	}
+
+	// 	stopNFC(); // Clean up previous NFC if any
+
+	// 	abortController = new AbortController();
+	// 	const { signal } = abortController;
+	// 	const ndef = new NDEFReader();
+
+	// 	try {
+	// 		updateStatus('Requesting NFC permissions...');
+	// 		await ndef.scan({ signal });
+
+	// 		updateStatus('NFC Started! Scanning for tags...');
+
+	// 		const timeoutId = setTimeout(() => {
+	// 			updateStatus('Connection timed out after 5 seconds.', true);
+	// 			stopNFC();
+	// 		}, CONNECTION_TIMEOUT);
+
+	// 		connectionCheckInterval = setInterval(checkConnection, 500);
+
+	// 		ndef.addEventListener('reading', (event) => {
+	// 			clearTimeout(timeoutId);
+	// 			lastReadingTime = Date.now();
+
+	// 			if (!isConnected) {
+	// 				isConnected = true;
+	// 				updateStatus('Connected successfully!');
+	// 				const scanCompleteEl = document.getElementById('scanComplete');
+	// 				if (scanCompleteEl) {
+	// 					scanCompleteEl.textContent =
+	// 						'Sensor HMD90 connected - Status: Active';
+	// 				}
+	// 				if (deviceId) {
+	// 					deviceId.textContent = event.serialNumber;
+	// 				}
+	// 				showPage('connected-page');
+	// 			}
+	// 		});
+
+	// 		ndef.addEventListener('readingerror', () => {
+	// 			updateStatus('Error reading NFC tag.', true);
+	// 		});
+
+	// 		signal.addEventListener('abort', () => {
+	// 			updateStatus('NFC scanning stopped.', true);
+	// 		});
+	// 	} catch (error) {
+	// 		handleError(error);
+	// 		autoReconnect();
+	// 	}
+	// }
+
+	// function stopNFC() {
+	// 	if (abortController) {
+	// 		abortController.abort();
+	// 		abortController = null;
+	// 	}
+	// 	if (connectionCheckInterval) {
+	// 		clearInterval(connectionCheckInterval);
+	// 		connectionCheckInterval = null;
+	// 	}
+	// 	isConnected = false;
+	// }
+
+	// function checkConnection() {
+	// 	const now = Date.now();
+	// 	if (isConnected && now - lastReadingTime > DISCONNECT_TIMEOUT) {
+	// 		isConnected = false;
+	// 		updateStatus('Tag disconnected.', true);
+
+	// 		const scanCompleteEl = document.getElementById('scanComplete');
+	// 		if (scanCompleteEl) {
+	// 			scanCompleteEl.textContent =
+	// 				'Sensor HMD90 disconnected - Status: Inactive';
+	// 		}
+
+	// 		stopNFC();
+	// 		autoReconnect();
+	// 	}
+	// }
+
+	// function updateStatus(message, isError = false) {
+	// 	if (nfcStatus) {
+	// 		nfcStatus.textContent = message;
+	// 		nfcStatus.style.color = isError ? '#fb6432' : '';
+	// 	}
+	// }
+
+	// function handleError(error) {
+	// 	let errorMessage = `Error: ${error.name}`;
+	// 	if (error.name === 'NotAllowedError') {
+	// 		errorMessage += ' - NFC permission denied';
+	// 	} else if (error.name === 'NotSupportedError') {
+	// 		errorMessage += ' - NFC not supported';
+	// 	} else if (error.message) {
+	// 		errorMessage += ` - ${error.message}`;
+	// 	}
+	// 	updateStatus(errorMessage, true);
+	// }
+
+	// function autoReconnect() {
+	// 	setTimeout(() => {
+	// 		startNFC();
+	// 	}, 2000); // Try reconnecting after 2 seconds
+	// }
 	async function startNFC() {
 		if (typeof NDEFReader === 'undefined') {
 			updateStatus('Web NFC is not supported in this browser.', true);
 			return;
 		}
 
-		stopNFC(); // Clean up previous NFC if any
+		stopNFC(); // Clean up previous
 
 		abortController = new AbortController();
 		const { signal } = abortController;
@@ -596,7 +707,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		try {
 			updateStatus('Requesting NFC permissions...');
 			await ndef.scan({ signal });
-
 			updateStatus('NFC Started! Scanning for tags...');
 
 			const timeoutId = setTimeout(() => {
@@ -622,6 +732,7 @@ document.addEventListener('DOMContentLoaded', function () {
 						deviceId.textContent = event.serialNumber;
 					}
 					showPage('connected-page');
+					showPopup('Sensor connected');
 				}
 			});
 
@@ -662,6 +773,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					'Sensor HMD90 disconnected - Status: Inactive';
 			}
 
+			showPopup('Sensor disconnected', true);
 			stopNFC();
 			autoReconnect();
 		}
@@ -689,9 +801,29 @@ document.addEventListener('DOMContentLoaded', function () {
 	function autoReconnect() {
 		setTimeout(() => {
 			startNFC();
-		}, 2000); // Try reconnecting after 2 seconds
+		}, 2000);
 	}
 
+	function showPopup(message, isError = false) {
+		const popup = document.createElement('div');
+		popup.textContent = message;
+		popup.style.position = 'fixed';
+		popup.style.bottom = '20px';
+		popup.style.left = '50%';
+		popup.style.transform = 'translateX(-50%)';
+		popup.style.padding = '12px 20px';
+		popup.style.backgroundColor = isError ? '#fb6432' : '#4caf50';
+		popup.style.color = '#fff';
+		popup.style.fontWeight = 'bold';
+		popup.style.borderRadius = '8px';
+		popup.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+		popup.style.zIndex = 1000;
+		document.body.appendChild(popup);
+
+		setTimeout(() => {
+			popup.remove();
+		}, 3000);
+	}
 	async function startNFC_working() {
 		// Check if Web NFC is available
 		if (typeof NDEFReader === 'undefined') {
