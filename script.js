@@ -1216,9 +1216,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } */
+	// Modification for updated flow on 5 May 25
+	// if (calibrationInputNextBtn) {
+	// 	calibrationInputNextBtn.addEventListener('click', function () {
+	// 		showPage('calibrated-page');
+	// 	});
+	// }
+
 	if (calibrationInputNextBtn) {
 		calibrationInputNextBtn.addEventListener('click', function () {
-			showPage('calibrated-page');
+			if (!nfcConnected) {
+				showReconnectSnackbar(); // Prevent advancing if not connected
+				return;
+			}
+			simulateReconnect(); // Simulate NFC reading + success
 		});
 	}
 
@@ -1245,6 +1256,66 @@ document.addEventListener('DOMContentLoaded', function () {
 		//    calibratedNextBtn.textContent = 'To main menu';
 		//}
 	}
+	let nfcConnected = true;
+	let reconnectSnackbar;
+
+	function showReconnectSnackbar() {
+		if (!reconnectSnackbar) {
+			reconnectSnackbar = document.createElement('div');
+			reconnectSnackbar.id = 'reconnect-snackbar';
+			reconnectSnackbar.className = 'snackbar';
+			reconnectSnackbar.innerHTML = `
+			<div>Device disconnected. Tap to reconnect.</div>
+			<button id="reconnect-now-btn">Reconnect</button>
+		`;
+			document.body.appendChild(reconnectSnackbar);
+
+			document
+				.getElementById('reconnect-now-btn')
+				.addEventListener('click', function () {
+					simulateReconnect();
+				});
+		}
+		reconnectSnackbar.style.display = 'flex';
+	}
+
+	function hideReconnectSnackbar() {
+		if (reconnectSnackbar) {
+			reconnectSnackbar.style.display = 'none';
+		}
+	}
+
+	function simulateDisconnect() {
+		nfcConnected = false;
+		showReconnectSnackbar();
+	}
+
+	function simulateReconnect() {
+		nfcConnected = true;
+		hideReconnectSnackbar();
+
+		// Simulate data update
+		const simulatedTemp = (20 + Math.random() * 5).toFixed(2);
+		const simulatedHumid = (40 + Math.random() * 10).toFixed(2);
+
+		temperatureInput.value = simulatedTemp;
+		humidityInput.value = simulatedHumid;
+
+		validateInputs();
+
+		// Simulate loading effect before proceeding
+		calibrationInputNextBtn.disabled = true;
+		calibrationInputNextBtn.textContent = 'Saving...';
+
+		setTimeout(() => {
+			calibrationInputNextBtn.textContent = 'Next';
+			calibrationInputNextBtn.disabled = false;
+			showPage('calibrated-page');
+		}, 2000);
+	}
+
+	// You can simulate disconnection after 5 seconds (or trigger via NFC event)
+	setTimeout(simulateDisconnect, 5000);
 
 	function validateInputFormat(input) {
 		const regex = /^-?\d{1,2}\.\d{2}$/; //minus dd.dd
