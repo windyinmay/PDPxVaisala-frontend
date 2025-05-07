@@ -584,6 +584,25 @@ document.addEventListener('DOMContentLoaded', function () {
 	// }
 	//Try cleaner version - 5th May it worked last time when having
 	// co-creation workshop with sponsors, reconnected in calibration/ install flow
+	// let wasEverConnected = false;
+
+	// function updateConnectionStatus(connected, serialNumber = '') {
+	// 	nfcConnected = connected;
+	// 	if (connected) wasEverConnected = true;
+
+	// 	connectionStatus.textContent = connected ? 'Connected' : 'Disconnected';
+	// 	connectionStatus.style.color = connected ? '#91c1b9' : '#fb6432';
+	// 	reconnectInstruction.style.display = connected ? 'none' : 'block';
+	// 	sendValuesBtn.disabled = !connected;
+	// 	deviceIdElement.textContent = connected ? serialNumber : 'Not connected';
+	// }
+
+	// function checkConnection() {
+	// 	updateConnectionStatus(nfcConnected, currentDeviceId);
+	// 	if (!nfcConnected && wasEverConnected) {
+	// 		showSnackbar('Sensor disconnected. Tap again to reconnect.');
+	// 	}
+	// }
 
 	async function startNFC() {
 		if (typeof NDEFReader === 'undefined') {
@@ -654,27 +673,47 @@ document.addEventListener('DOMContentLoaded', function () {
 		isConnected = false;
 	}
 
-	function checkConnection() {
-		const now = Date.now();
-		if (isConnected && now - lastReadingTime > DISCONNECT_TIMEOUT) {
-			isConnected = false;
-			updateStatus('Tag disconnected.', true);
+	// function checkConnection() {
+	// 	const now = Date.now();
+	// 	if (isConnected && now - lastReadingTime > DISCONNECT_TIMEOUT) {
+	// 		isConnected = false;
+	// 		updateStatus('Tag disconnected.', true);
 
-			const scanCompleteEl = document.getElementById('scanComplete');
-			if (scanCompleteEl) {
-				scanCompleteEl.textContent =
-					'Sensor HMD90 disconnected - Status: Inactive';
-			}
+	// 		const scanCompleteEl = document.getElementById('scanComplete');
+	// 		if (scanCompleteEl) {
+	// 			scanCompleteEl.textContent =
+	// 				'Sensor HMD90 disconnected - Status: Inactive';
+	// 		}
 
-			stopNFC();
-			autoReconnect();
-		}
-	}
+	// 		stopNFC();
+	// 		autoReconnect();
+	// 	}
+	// }
 
 	function updateStatus(message, isError = false) {
 		if (nfcStatus) {
 			nfcStatus.textContent = message;
 			nfcStatus.style.color = isError ? '#fb6432' : '';
+		}
+	}
+
+	let wasEverConnected = false;
+
+	function updateConnectionStatus(connected, serialNumber = '') {
+		nfcConnected = connected;
+		if (connected) wasEverConnected = true;
+
+		connectionStatus.textContent = connected ? 'Connected' : 'Disconnected';
+		connectionStatus.style.color = connected ? '#91c1b9' : '#fb6432';
+		reconnectInstruction.style.display = connected ? 'none' : 'block';
+		sendValuesBtn.disabled = !connected;
+		deviceIdElement.textContent = connected ? serialNumber : 'Not connected';
+	}
+
+	function checkConnection() {
+		updateConnectionStatus(nfcConnected, currentDeviceId);
+		if (!nfcConnected && wasEverConnected) {
+			showSnackbar('Sensor disconnected. Tap again to reconnect.');
 		}
 	}
 
