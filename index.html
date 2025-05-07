@@ -272,7 +272,7 @@
 				<img src="images/scan-complete2.png" alt="scan complete" />
 			</div>
 			<p id="scanComplete">Sensor HMD90 connected</p>
-			<p id="scanComplete2">NFC tag ID: <span id="device-id">--</span></p>
+			<p id="scanComplete2">Device ID: <span id="device-id">--</span></p>
 			<button id="done-btn" class="btn">Next</button>
 		</div>
 
@@ -471,6 +471,28 @@
 				</button>
 			</div>
 		</div>
+		<!-- Unified NFC Status & Action Page -->
+		<div id="connection-status-page" class="page">
+			<h1>Sensor Status</h1>
+			<p>Last detected sensor: <strong id="device-id">Not connected</strong></p>
+			<p>
+				Status:
+				<strong id="connection-status" style="color: #fb6432"
+					>Disconnected</strong
+				>
+			</p>
+			<p id="reconnect-instruction" style="display: none">
+				Please hold the phone close to the device again to reconnect the sensor.
+			</p>
+			<div class="button-row">
+				<button id="send-input-back-btn" class="btn btn-secondary">Back</button>
+				<button id="send-values-btn" class="btn btn-next" disabled>
+					Send Updated Values
+				</button>
+			</div>
+			<p id="sending-status" class="hidden">Sending data to sensor...</p>
+		</div>
+
 		<!-- Calibrated Page -->
 		<div id="calibrated-page" class="page">
 			<div class="centered-content">

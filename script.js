@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	const calibrationInputBackBtn = document.getElementById(
 		'calibration-input-back-btn'
 	);
+	const sendUpdatedValueBackBtn = document.getElementById(
+		'send-input-back-btn'
+	);
 	const calibrationInputNextBtn = document.getElementById(
 		'calibration-input-next-btn'
 	);
@@ -457,7 +460,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	let readingCounter = 0;
 	const CONNECTION_TIMEOUT = 5000; // 5 seconds for initial connection
 	const DISCONNECT_THRESHOLD = 10; // Increased threshold - wait longer before disconnecting
-	//const DISCONNECT_TIMEOUT = 5000; // 5 seconds before disconnecting
 
 	let isConnected = false;
 	let abortController = null;
@@ -466,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	let ndef = null;
 	let tagCheckTimer = null;
 
-	const DISCONNECT_TIMEOUT = 3000; // 5 seconds before disconnecting
+	const DISCONNECT_TIMEOUT = 300000; // 5 minutes (300000 ms) before disconnecting again
 	//Old version -- Nina's code is below
 	// async function startNFC() {
 	// 	// Check if Web NFC is available
@@ -582,123 +584,14 @@ document.addEventListener('DOMContentLoaded', function () {
 	// }
 	//Try cleaner version - 5th May it worked last time when having
 	// co-creation workshop with sponsors, reconnected in calibration/ install flow
-	// async function startNFC() {
-	// 	if (typeof NDEFReader === 'undefined') {
-	// 		updateStatus('Web NFC is not supported in this browser.', true);
-	// 		return;
-	// 	}
 
-	// 	stopNFC(); // Clean up previous NFC if any
-
-	// 	abortController = new AbortController();
-	// 	const { signal } = abortController;
-	// 	const ndef = new NDEFReader();
-
-	// 	try {
-	// 		updateStatus('Requesting NFC permissions...');
-	// 		await ndef.scan({ signal });
-
-	// 		updateStatus('NFC Started! Scanning for tags...');
-
-	// 		const timeoutId = setTimeout(() => {
-	// 			updateStatus('Connection timed out after 5 seconds.', true);
-	// 			stopNFC();
-	// 		}, CONNECTION_TIMEOUT);
-
-	// 		connectionCheckInterval = setInterval(checkConnection, 500);
-
-	// 		ndef.addEventListener('reading', (event) => {
-	// 			clearTimeout(timeoutId);
-	// 			lastReadingTime = Date.now();
-
-	// 			if (!isConnected) {
-	// 				isConnected = true;
-	// 				updateStatus('Connected successfully!');
-	// 				const scanCompleteEl = document.getElementById('scanComplete');
-	// 				if (scanCompleteEl) {
-	// 					scanCompleteEl.textContent =
-	// 						'Sensor HMD90 connected - Status: Active';
-	// 				}
-	// 				if (deviceId) {
-	// 					deviceId.textContent = event.serialNumber;
-	// 				}
-	// 				showPage('connected-page');
-	// 			}
-	// 		});
-
-	// 		ndef.addEventListener('readingerror', () => {
-	// 			updateStatus('Error reading NFC tag.', true);
-	// 		});
-
-	// 		signal.addEventListener('abort', () => {
-	// 			updateStatus('NFC scanning stopped.', true);
-	// 		});
-	// 	} catch (error) {
-	// 		handleError(error);
-	// 		autoReconnect();
-	// 	}
-	// }
-
-	// function stopNFC() {
-	// 	if (abortController) {
-	// 		abortController.abort();
-	// 		abortController = null;
-	// 	}
-	// 	if (connectionCheckInterval) {
-	// 		clearInterval(connectionCheckInterval);
-	// 		connectionCheckInterval = null;
-	// 	}
-	// 	isConnected = false;
-	// }
-
-	// function checkConnection() {
-	// 	const now = Date.now();
-	// 	if (isConnected && now - lastReadingTime > DISCONNECT_TIMEOUT) {
-	// 		isConnected = false;
-	// 		updateStatus('Tag disconnected.', true);
-
-	// 		const scanCompleteEl = document.getElementById('scanComplete');
-	// 		if (scanCompleteEl) {
-	// 			scanCompleteEl.textContent =
-	// 				'Sensor HMD90 disconnected - Status: Inactive';
-	// 		}
-
-	// 		stopNFC();
-	// 		autoReconnect();
-	// 	}
-	// }
-
-	// function updateStatus(message, isError = false) {
-	// 	if (nfcStatus) {
-	// 		nfcStatus.textContent = message;
-	// 		nfcStatus.style.color = isError ? '#fb6432' : '';
-	// 	}
-	// }
-
-	// function handleError(error) {
-	// 	let errorMessage = `Error: ${error.name}`;
-	// 	if (error.name === 'NotAllowedError') {
-	// 		errorMessage += ' - NFC permission denied';
-	// 	} else if (error.name === 'NotSupportedError') {
-	// 		errorMessage += ' - NFC not supported';
-	// 	} else if (error.message) {
-	// 		errorMessage += ` - ${error.message}`;
-	// 	}
-	// 	updateStatus(errorMessage, true);
-	// }
-
-	// function autoReconnect() {
-	// 	setTimeout(() => {
-	// 		startNFC();
-	// 	}, 2000); // Try reconnecting after 2 seconds
-	// }
 	async function startNFC() {
 		if (typeof NDEFReader === 'undefined') {
 			updateStatus('Web NFC is not supported in this browser.', true);
 			return;
 		}
 
-		stopNFC(); // Clean up previous
+		stopNFC(); // Clean up previous NFC if any
 
 		abortController = new AbortController();
 		const { signal } = abortController;
@@ -707,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		try {
 			updateStatus('Requesting NFC permissions...');
 			await ndef.scan({ signal });
+
 			updateStatus('NFC Started! Scanning for tags...');
 
 			const timeoutId = setTimeout(() => {
@@ -732,7 +626,6 @@ document.addEventListener('DOMContentLoaded', function () {
 						deviceId.textContent = event.serialNumber;
 					}
 					showPage('connected-page');
-					showPopup('Sensor connected');
 				}
 			});
 
@@ -773,7 +666,6 @@ document.addEventListener('DOMContentLoaded', function () {
 					'Sensor HMD90 disconnected - Status: Inactive';
 			}
 
-			showPopup('Sensor disconnected', true);
 			stopNFC();
 			autoReconnect();
 		}
@@ -801,29 +693,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	function autoReconnect() {
 		setTimeout(() => {
 			startNFC();
-		}, 2000);
+		}, 2000); // Try reconnecting after 2 seconds
 	}
 
-	function showPopup(message, isError = false) {
-		const popup = document.createElement('div');
-		popup.textContent = message;
-		popup.style.position = 'fixed';
-		popup.style.bottom = '20px';
-		popup.style.left = '50%';
-		popup.style.transform = 'translateX(-50%)';
-		popup.style.padding = '12px 20px';
-		popup.style.backgroundColor = isError ? '#fb6432' : '#4caf50';
-		popup.style.color = '#fff';
-		popup.style.fontWeight = 'bold';
-		popup.style.borderRadius = '8px';
-		popup.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-		popup.style.zIndex = 1000;
-		document.body.appendChild(popup);
-
-		setTimeout(() => {
-			popup.remove();
-		}, 3000);
-	}
 	async function startNFC_working() {
 		// Check if Web NFC is available
 		if (typeof NDEFReader === 'undefined') {
@@ -932,6 +804,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		}
 	}
+	// Enable the upper one again if the below does not work
 
 	// NFC Scanning functionality
 	async function startNFCold() {
@@ -1188,6 +1061,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
+	if (sendUpdatedValueBackBtn) {
+		sendUpdatedValueBackBtn.addEventListener('click', function () {
+			// Check current flow to determine where to go back to
+			showPage('calibration-input-page');
+		});
+	}
+
 	/* if (calibrationInputNextBtn) {
         calibrationInputNextBtn.addEventListener('click', function () {
             // Make sensor status flash 3 times
@@ -1217,22 +1097,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } */
 	// Modification for updated flow on 5 May 25
-	// if (calibrationInputNextBtn) {
-	// 	calibrationInputNextBtn.addEventListener('click', function () {
-	// 		showPage('calibrated-page');
-	// 	});
-	// }
-
 	if (calibrationInputNextBtn) {
 		calibrationInputNextBtn.addEventListener('click', function () {
-			if (!nfcConnected) {
-				showReconnectSnackbar(); // Prevent advancing if not connected
-				return;
-			}
-			simulateReconnect(); // Simulate NFC reading + success
+			showPage('calibrated-page');
 		});
 	}
-
+	// Calibration input page - 7 May keeps modifying this!
+	// if (calibrationInputNextBtn) {
+	// 	calibrationInputNextBtn.addEventListener('click', function () {
+	// 		showPage('connection-status-page');
+	// 	});
+	// }
 	// Calibrated page buttons
 	const calibratedBackBtn = document.getElementById('calibrated-back-btn');
 	if (calibratedBackBtn) {
@@ -1258,64 +1133,64 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 	let nfcConnected = true;
 	let reconnectSnackbar;
+	// this is bad implementation, the status displayed below the main screen even before login
+	// function showReconnectSnackbar() {
+	// 	if (!reconnectSnackbar) {
+	// 		reconnectSnackbar = document.createElement('div');
+	// 		reconnectSnackbar.id = 'reconnect-snackbar';
+	// 		reconnectSnackbar.className = 'snackbar';
+	// 		reconnectSnackbar.innerHTML = `
+	// 		<div>Device disconnected. Tap to reconnect.</div>
+	// 		<button id="reconnect-now-btn">Reconnect</button>
+	// 	`;
+	// 		document.body.appendChild(reconnectSnackbar);
 
-	function showReconnectSnackbar() {
-		if (!reconnectSnackbar) {
-			reconnectSnackbar = document.createElement('div');
-			reconnectSnackbar.id = 'reconnect-snackbar';
-			reconnectSnackbar.className = 'snackbar';
-			reconnectSnackbar.innerHTML = `
-			<div>Device disconnected. Tap to reconnect.</div>
-			<button id="reconnect-now-btn">Reconnect</button>
-		`;
-			document.body.appendChild(reconnectSnackbar);
+	// 		document
+	// 			.getElementById('reconnect-now-btn')
+	// 			.addEventListener('click', function () {
+	// 				simulateReconnect();
+	// 			});
+	// 	}
+	// 	reconnectSnackbar.style.display = 'flex';
+	// }
 
-			document
-				.getElementById('reconnect-now-btn')
-				.addEventListener('click', function () {
-					simulateReconnect();
-				});
-		}
-		reconnectSnackbar.style.display = 'flex';
-	}
+	// function hideReconnectSnackbar() {
+	// 	if (reconnectSnackbar) {
+	// 		reconnectSnackbar.style.display = 'none';
+	// 	}
+	// }
 
-	function hideReconnectSnackbar() {
-		if (reconnectSnackbar) {
-			reconnectSnackbar.style.display = 'none';
-		}
-	}
+	// function simulateDisconnect() {
+	// 	nfcConnected = false;
+	// 	showReconnectSnackbar();
+	// }
 
-	function simulateDisconnect() {
-		nfcConnected = false;
-		showReconnectSnackbar();
-	}
+	// function simulateReconnect() {
+	// 	nfcConnected = true;
+	// 	hideReconnectSnackbar();
 
-	function simulateReconnect() {
-		nfcConnected = true;
-		hideReconnectSnackbar();
+	// 	// Simulate data update
+	// 	const simulatedTemp = (20 + Math.random() * 5).toFixed(2);
+	// 	const simulatedHumid = (40 + Math.random() * 10).toFixed(2);
 
-		// Simulate data update
-		const simulatedTemp = (20 + Math.random() * 5).toFixed(2);
-		const simulatedHumid = (40 + Math.random() * 10).toFixed(2);
+	// 	temperatureInput.value = simulatedTemp;
+	// 	humidityInput.value = simulatedHumid;
 
-		temperatureInput.value = simulatedTemp;
-		humidityInput.value = simulatedHumid;
+	// 	validateInputs();
 
-		validateInputs();
+	// 	// Simulate loading effect before proceeding
+	// 	calibrationInputNextBtn.disabled = true;
+	// 	calibrationInputNextBtn.textContent = 'Saving...';
 
-		// Simulate loading effect before proceeding
-		calibrationInputNextBtn.disabled = true;
-		calibrationInputNextBtn.textContent = 'Saving...';
+	// 	setTimeout(() => {
+	// 		calibrationInputNextBtn.textContent = 'Next';
+	// 		calibrationInputNextBtn.disabled = false;
+	// 		showPage('calibrated-page');
+	// 	}, 2000);
+	// }
 
-		setTimeout(() => {
-			calibrationInputNextBtn.textContent = 'Next';
-			calibrationInputNextBtn.disabled = false;
-			showPage('calibrated-page');
-		}, 2000);
-	}
-
-	// You can simulate disconnection after 5 seconds (or trigger via NFC event)
-	setTimeout(simulateDisconnect, 5000);
+	// // You can simulate disconnection after 5 seconds (or trigger via NFC event)
+	// setTimeout(simulateDisconnect, 5000);
 
 	function validateInputFormat(input) {
 		const regex = /^-?\d{1,2}\.\d{2}$/; //minus dd.dd
