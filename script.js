@@ -121,6 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
 	);
 	const preCalibrationOption = document.getElementById('pre-calibrated-option');
 	//const intervalSelect = document.getElementById('calibration-interval');
+	const reconnectPage = document.getElementById('reconnect-page');
+	const reconnectBackBtn = document.getElementById('reconnect-back-btn');
+	const reconnectNextBtn = document.getElementById('reconnect-next-btn');
+	const reconnectStatus = document.getElementById('reconnect-status');
 
 	let currentFlow = 'setup'; // Default flow is 'setup', alternative is 'calibration'
 
@@ -154,6 +158,15 @@ document.addEventListener('DOMContentLoaded', function () {
 				gallery.style.display = 'none';
 			}
 		});
+		// Show/hide reconnect message on calibration-input-page based on flow
+		const reconnectInfo = document.getElementById('reconnect-info');
+		if (reconnectInfo) {
+			if (flow === 'calibration') {
+				reconnectInfo.classList.remove('hidden');
+			} else {
+				reconnectInfo.classList.add('hidden');
+			}
+		}
 		updateButtonsBasedOnFlow(flow);
 	}
 
@@ -182,8 +195,33 @@ document.addEventListener('DOMContentLoaded', function () {
 		skipMaintenanceOption.addEventListener('change', function () {
 			if (this.checked) {
 				// If "Skip maintenance plan" is selected, go directly to the complete page
-				showPage('maintenance-complete-page');
+				showPage('reconnect-page');
 			}
+		});
+	}
+	if (reconnectBackBtn) {
+		reconnectBackBtn.addEventListener('click', function () {
+			if (currentFlow === 'calibration') {
+				// For "calibrate existing sensor" flow, go back to calibration input page
+				showPage('calibration-input-page');
+			} else {
+				// For "set up new sensor" flow, go back to maintenance-interval-page or maintenance-plan-page
+				const selectedOption = document.querySelector(
+					'input[name="maintenance-option"]:checked'
+				);
+
+				if (selectedOption && selectedOption.value === 'setup-maintenance') {
+					showPage('maintenance-interval-page');
+				} else {
+					showPage('maintenance-plan-page');
+				}
+			}
+		});
+	}
+	if (reconnectNextBtn) {
+		reconnectNextBtn.addEventListener('click', function () {
+			// Move to the maintenance-complete-page
+			showPage('maintenance-complete-page');
 		});
 	}
 	if (preCalibrationOption) {
@@ -197,10 +235,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// NFC Info page next button
 	/*  if (nfcNextBtn) {
-         nfcNextBtn.addEventListener('click', function () {
-             showPage('scan-page');
-         });
-     } */
+		 nfcNextBtn.addEventListener('click', function () {
+			 showPage('scan-page');
+		 });
+	 } */
 
 	let scanImageInterval;
 	// Add this to your showPage function to handle special pages with no toolbar text
@@ -257,6 +295,18 @@ document.addEventListener('DOMContentLoaded', function () {
 					currentFlow === 'setup'
 						? 'Set up new sensor'
 						: 'Calibrate existing sensor';
+			}
+		}
+		// Additional logic for calibration-input-page
+		if (pageId === 'calibration-input-page') {
+			const reconnectInfo = document.getElementById('reconnect-info');
+			if (reconnectInfo) {
+				// Show reconnect message only for calibration flow
+				if (currentFlow === 'calibration') {
+					reconnectInfo.classList.remove('hidden');
+				} else {
+					reconnectInfo.classList.add('hidden');
+				}
 			}
 		}
 
@@ -894,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	// Modify the updateProgressBar function with the correct step IDs
-	function updateProgressBar(pageId) {
+	function updateProgressBar_old(pageId) {
 		const progressBarContainer = document.getElementById(
 			'progress-bar-container'
 		);
@@ -908,6 +958,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			'calibrated-page',
 			'maintenance-plan-page',
 			'maintenance-interval-page',
+			'reconnect-page',
 			'maintenance-complete-page',
 		];
 
@@ -972,7 +1023,8 @@ document.addEventListener('DOMContentLoaded', function () {
 				// We don't add 'completed' to the third step as it's disabled
 			} else if (
 				pageId === 'maintenance-plan-page' ||
-				pageId === 'maintenance-interval-page'
+				pageId === 'maintenance-interval-page' ||
+				pageId === 'reconnect-page'
 			) {
 				//|| pageId === 'maintenance-complete-page'
 				// First step - completed with check mark
@@ -1010,6 +1062,92 @@ document.addEventListener('DOMContentLoaded', function () {
 				document.getElementById('step-maintain').classList.remove('current');
 				document.getElementById('step-maintain').classList.add('completed');
 			}
+			document.getElementById(pageId).style.paddingTop = 'calc(60px + 0.45cm)';
+		} else {
+			progressBarContainer.classList.add('hidden');
+			document.querySelectorAll('.page').forEach((page) => {
+				page.classList.remove('with-progress-bar');
+			});
+		}
+	}
+	function updateProgressBar(pageId) {
+		const progressBarContainer = document.getElementById('progress-bar-container');
+
+		// Pages that should show the progress bar
+		const progressBarPages = [
+			'configuration-page',
+			'calibration-page',
+			'calibration-options-page',
+			'calibration-input-page',
+			'calibrated-page',
+			'maintenance-plan-page',
+			'maintenance-interval-page',
+			'reconnect-page',
+			'maintenance-complete-page',
+		];
+
+		// Show/hide progress bar based on current page
+		if (progressBarPages.includes(pageId)) {
+			progressBarContainer.classList.remove('hidden');
+			document.getElementById(pageId).classList.add('with-progress-bar');
+
+			// First, reset all states
+			document.getElementById('step-config').classList.remove('current', 'completed');
+			document.getElementById('step-calibrate').classList.remove('current', 'completed');
+			document.getElementById('step-maintain').classList.remove('current', 'completed');
+			document.getElementById('line-1').classList.remove('completed');
+			document.getElementById('line-2').classList.remove('completed');
+
+			// Then set the correct states based on current page
+			if (pageId === 'configuration-page') {
+				// First step - current with dot
+				document.getElementById('step-config').classList.add('current');
+			} else if (
+				pageId === 'calibration-page' ||
+				pageId === 'calibration-options-page' ||
+				pageId === 'calibration-input-page'
+			) {
+				// First step - completed with check mark
+				document.getElementById('step-config').classList.add('completed');
+				// First line - completed
+				document.getElementById('line-1').classList.add('completed');
+				// Second step - current with dot
+				document.getElementById('step-calibrate').classList.add('current');
+			} else if (pageId === 'calibrated-page') {
+				// First step - completed with check mark
+				document.getElementById('step-config').classList.add('completed');
+				// First line - completed
+				document.getElementById('line-1').classList.add('completed');
+				// Second step - completed with check mark
+				document.getElementById('step-calibrate').classList.add('completed');
+			} else if (
+				pageId === 'maintenance-plan-page' ||
+				pageId === 'maintenance-interval-page' ||
+				pageId === 'reconnect-page'
+			) {
+				// First step - completed with check mark
+				document.getElementById('step-config').classList.add('completed');
+				// First line - completed
+				document.getElementById('line-1').classList.add('completed');
+				// Second step - completed with check mark
+				document.getElementById('step-calibrate').classList.add('completed');
+				// Second line - completed
+				document.getElementById('line-2').classList.add('completed');
+				// Third step - current with dot (IMPORTANT: This is the fix for the reconnect page)
+				document.getElementById('step-maintain').classList.add('current');
+			} else if (pageId === 'maintenance-complete-page') {
+				// First step - completed with check mark
+				document.getElementById('step-config').classList.add('completed');
+				// First line - completed
+				document.getElementById('line-1').classList.add('completed');
+				// Second step - completed with check mark
+				document.getElementById('step-calibrate').classList.add('completed');
+				// Second line - completed
+				document.getElementById('line-2').classList.add('completed');
+				// Third step - completed with check mark
+				document.getElementById('step-maintain').classList.add('completed');
+			}
+
 			document.getElementById(pageId).style.paddingTop = 'calc(60px + 0.45cm)';
 		} else {
 			progressBarContainer.classList.add('hidden');
@@ -1108,37 +1246,43 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	/* if (calibrationInputNextBtn) {
-        calibrationInputNextBtn.addEventListener('click', function () {
-            // Make sensor status flash 3 times
-            if (sensorStatus) {
-                sensorStatus.classList.add('flare');
+		calibrationInputNextBtn.addEventListener('click', function () {
+			// Make sensor status flash 3 times
+			if (sensorStatus) {
+				sensorStatus.classList.add('flare');
 
-                // Create and add reconnect button if it doesn't exist
-                let reconnectBtn = document.getElementById('reconnect-btn');
-                if (!reconnectBtn) {
-                    reconnectBtn = document.createElement('button');
-                    reconnectBtn.id = 'reconnect-btn';
-                    reconnectBtn.className = 'reconnect-btn';
-                    reconnectBtn.textContent = 'Simulate Reconnect';
-                    sensorStatus.parentNode.insertBefore(reconnectBtn, sensorStatus.nextSibling);
+				// Create and add reconnect button if it doesn't exist
+				let reconnectBtn = document.getElementById('reconnect-btn');
+				if (!reconnectBtn) {
+					reconnectBtn = document.createElement('button');
+					reconnectBtn.id = 'reconnect-btn';
+					reconnectBtn.className = 'reconnect-btn';
+					reconnectBtn.textContent = 'Simulate Reconnect';
+					sensorStatus.parentNode.insertBefore(reconnectBtn, sensorStatus.nextSibling);
 
-                    // Add event listener to the reconnect button
-                    reconnectBtn.addEventListener('click', function () {
-                        showPage('calibrated-page');
-                    });
-                }
+					// Add event listener to the reconnect button
+					reconnectBtn.addEventListener('click', function () {
+						showPage('calibrated-page');
+					});
+				}
 
-                // Remove the flare effect after animation completes (approx 4 seconds)
-                setTimeout(function () {
-                    sensorStatus.classList.remove('flare');
-                }, 4000);
-            }
-        });
-    } */
+				// Remove the flare effect after animation completes (approx 4 seconds)
+				setTimeout(function () {
+					sensorStatus.classList.remove('flare');
+				}, 4000);
+			}
+		});
+	} */
 	// Modification for updated flow on 5 May 25
 	if (calibrationInputNextBtn) {
 		calibrationInputNextBtn.addEventListener('click', function () {
-			showPage('calibrated-page');
+			if (currentFlow === 'calibration') {
+				// For "calibrate existing device" flow, go directly to reconnect page
+				showPage('reconnect-page');
+			} else {
+				// For "set up new device" flow, continue with the original flow to calibrated page
+				showPage('calibrated-page');
+			}
 		});
 	}
 	// Calibration input page - 7 May keeps modifying this!
@@ -1231,9 +1375,21 @@ document.addEventListener('DOMContentLoaded', function () {
 	// // You can simulate disconnection after 5 seconds (or trigger via NFC event)
 	// setTimeout(simulateDisconnect, 5000);
 
-	function validateInputFormat(input) {
-		const regex = /^-?\d{1,2}\.\d{2}$/; //minus dd.dd
-		return regex.test(input.value);
+	function validateInputFormat(input, type) {
+		//const regex = /^-?\d{1,2}\.\d{2}$/; //minus dd.dd
+		//return regex.test(input.value);
+		if (!type) {
+			type = input === temperatureInput ? 'temperature' : 'humidity';
+		}
+		if (type === 'temperature') {
+			// For temperature: Allow format like 23.4 or -10.5 (only one decimal required)
+			const regex = /^-?\d{1,2}\.\d{1,}$/;
+			return regex.test(input.value);
+		} else if (type === 'humidity') {
+			// For humidity: Allow integers without decimal points
+			const regex = /^\d{1,3}$/;
+			return regex.test(input.value);
+		}
 	}
 
 	function validateInputs() {
@@ -1305,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		temperatureInput.addEventListener('blur', function () {
 			validateFieldOnBlur(
 				temperatureInput,
-				'Temperature must be in format: ##.## or -##.## (e.g. 23.45 or -10.25)'
+				'Temperature must be in this format: 23.4 or -10.2'
 			);
 		});
 	}
@@ -1318,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		humidityInput.addEventListener('blur', function () {
 			validateFieldOnBlur(
 				humidityInput,
-				'Humidity must be in format: ##.## (e.g. 45.67)'
+				'Humidity must be in this format: 45'
 			);
 		});
 	}
@@ -1359,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					showPage('maintenance-interval-page');
 				} else {
 					// Skip to welcome or completion
-					showPage('maintenance-complete-page');
+					showPage('reconnect-page');
 				}
 			} else {
 				// If nothing is selected, you might want to show a message
@@ -1394,7 +1550,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	if (intervalNextBtn) {
 		intervalNextBtn.addEventListener('click', function () {
-			showPage('maintenance-complete-page');
+			showPage('reconnect-page');
 		});
 	}
 
@@ -1412,14 +1568,15 @@ document.addEventListener('DOMContentLoaded', function () {
 	// Add event listeners for maintenance complete page
 	if (completeBackBtn) {
 		completeBackBtn.addEventListener('click', function () {
-			const selectedOption = document.querySelector(
-				'input[name="maintenance-option"]:checked'
-			);
-			if (selectedOption && selectedOption.value === 'setup-maintenance') {
-				showPage('maintenance-interval-page');
-			} else {
-				showPage('maintenance-plan-page');
-			}
+			//const selectedOption = document.querySelector(
+			//	'input[name="maintenance-option"]:checked'
+			//);
+			//if (selectedOption && selectedOption.value === 'setup-maintenance') {
+			//	showPage('maintenance-interval-page');
+			//} else {
+			//	showPage('maintenance-plan-page');
+			showPage('reconnect-page');
+
 		});
 	}
 

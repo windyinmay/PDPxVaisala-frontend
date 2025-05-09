@@ -7,6 +7,7 @@
 	--tone-medium: #9ea3a9;
 	--text-neutral: #f3f3f3;
 }
+
 /* Base Styles */
 body {
 	font-family: Arial, sans-serif;
@@ -30,7 +31,7 @@ h1 {
 h2 {
 	font-size: 20px;
 	margin: 10px 0;
-	padding-top: 20px;
+	padding-top: 10px;
 	text-align: center;
 	font-weight: medium;
 }
@@ -606,40 +607,48 @@ body:not(.at-welcome-page) .welcome-top-toolbar {
 	bottom: 70px;
 	left: 20px;
 }
+
 #skip-instructions-btn {
 	background-color: var(--ember-orange);
 	border-radius: 40px;
 }
+
 #skip-instructions-btn:hover {
 	/* background-color: var(--thunder-blue); */
 	text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	transition: box-shadow 0.3s ease;
 }
+
 #login-form .btn {
 	margin-top: 30px;
 }
+
 #skip-nfc-btn {
 	/* border-radius: 40px; */
 	bottom: 130px;
 	background-color: var(--ember-orange);
 }
+
 #skip-nfc-btn:hover {
 	text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	transition: box-shadow 0.3s ease;
 }
+
 #login-btn.enabled {
 	background-color: var(--thunder-blue);
 	color: white;
 	cursor: pointer;
 	/* color: var(--thunder-blue); */
 }
+
 #login-btn.enabled:hover {
 	text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	transition: box-shadow 0.3s ease;
 }
+
 .button-row {
 	display: flex;
 	justify-content: space-between;
@@ -953,7 +962,7 @@ body:not(.at-welcome-page) .welcome-top-toolbar {
 #calibration-input-page h2 {
 	font-size: 18px;
 	margin-top: 5px;
-	margin-bottom: 8px;
+	margin-bottom: 4px;
 	text-align: left;
 }
 
@@ -1303,7 +1312,7 @@ body:not(.at-welcome-page) .welcome-top-toolbar {
 	line-height: 1.5;
 }
 
-h1 + h1 {
+h1+h1 {
 	margin-top: 2rem;
 }
 
@@ -1513,11 +1522,11 @@ h1 + h1 {
 	border-radius: 50%;
 }
 
-input:checked + .toggle-slider {
+input:checked+.toggle-slider {
 	background-color: #0a2a3d;
 }
 
-input:checked + .toggle-slider:before {
+input:checked+.toggle-slider:before {
 	transform: translateX(26px);
 }
 
@@ -1659,4 +1668,24 @@ input:checked + .toggle-slider:before {
 
 .inactive-scan-image {
 	opacity: 0;
+}
+
+.reconnect-message {
+	/*margin-top: 15px;*/
+	margin-top: -80px;
+	/*padding: 10px;*/
+	/*background-color: var(--misty-green);*/
+	/*border: 1px solid var(--thunder-blue);*/
+	font-weight: bold;
+
+}
+
+#reconnect-end {
+	text-align: center;
+	font-size: 18px;
+	font-weight: 500;
+	margin: 20px auto;
+	max-width: 90%;
+	line-height: 1.4;
+	padding: 15px;
 }
